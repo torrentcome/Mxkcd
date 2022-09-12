@@ -1,5 +1,6 @@
 package com.example.mxkcd.net
 
+import com.example.mxkcd.db.EntityItem
 import com.example.mxkcd.dto.XkcdItem
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -29,6 +30,22 @@ class NetItem (
     @Json(name = "day")
     val day: String = ""
 )
+
+fun NetItem.asDbModel(): EntityItem {
+    return EntityItem(
+        num = num,
+        month = month,
+        link = link,
+        year = year,
+        news = news,
+        safe_title = safe_title,
+        transcript = transcript,
+        alt = alt,
+        img = img,
+        title = title,
+        day = day
+    )
+}
 
 fun NetItem.asDtoModel(): XkcdItem {
     return XkcdItem(

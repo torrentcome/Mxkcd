@@ -26,10 +26,10 @@ fun XkcdTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable (
 }
 
 private val XDarkColorPalette = darkColors(
-    primary = Color(0xFFBB86FC),//Purple200
-    primaryVariant = Color(0xFF3700B3),//Purple500
-    secondary = Color(0xFFF8F8F8),//Purple700
-    background = Color(0xFF121212)//Grey200
+    primary = Color(0xFF96A8C8),
+    primaryVariant = Color(0xFF3700B3),
+    secondary = Color(0xFF6E7B91),
+    background = Color(0xFF121212)
 )
 
 private val XLightColorPalette = lightColors(

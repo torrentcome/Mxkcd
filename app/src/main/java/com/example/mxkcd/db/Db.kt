@@ -13,7 +13,7 @@ interface XkcdDao {
     fun get(id: Int): LiveData<EntityItem>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun put(xkcdItem: XkcdItem)
+    fun put(xkcdItem: EntityItem)
 }
 
 @Database(entities = [EntityItem::class], version = 1)

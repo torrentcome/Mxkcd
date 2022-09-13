@@ -1,18 +1,17 @@
 package com.example.mxkcd.db
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.example.mxkcd.dto.XkcdItem
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface XkcdDao {
-    @Query("select * from EntityItem")
-    fun getList(): LiveData<List<XkcdItem>>
+    @Query("select * from EntityItem ORDER BY num ASC")
+    fun getAll(): List<EntityItem>
 
     @Query("select * from EntityItem WHERE num LIKE :id")
-    fun get(id: Int): LiveData<EntityItem>
+    fun get(id: Int): Flow<EntityItem>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun put(xkcdItem: EntityItem)
 }
 

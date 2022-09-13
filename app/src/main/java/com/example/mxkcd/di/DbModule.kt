@@ -19,6 +19,7 @@ object DatabaseModule {
     fun provideAppDatabase(@ApplicationContext appContext: Context): DbXkcd {
         return Room.databaseBuilder(appContext, DbXkcd::class.java, "db_xkcd")
             .fallbackToDestructiveMigration()
+            .allowMainThreadQueries()
             .build()
     }
 

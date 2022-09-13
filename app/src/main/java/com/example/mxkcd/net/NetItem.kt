@@ -29,22 +29,10 @@ class NetItem (
     val title: String = "",
     @Json(name = "day")
     val day: String = ""
-)
-
-fun NetItem.asDbModel(): EntityItem {
-    return EntityItem(
-        num = num,
-        month = month,
-        link = link,
-        year = year,
-        news = news,
-        safe_title = safe_title,
-        transcript = transcript,
-        alt = alt,
-        img = img,
-        title = title,
-        day = day
-    )
+) {
+    override fun toString(): String {
+        return "NetItem(num=$num, month='$month', link='$link', year='$year', news='$news', safe_title='$safe_title', transcript='$transcript', alt='$alt', img='$img', title='$title', day='$day')"
+    }
 }
 
 fun NetItem.asDtoModel(): XkcdItem {

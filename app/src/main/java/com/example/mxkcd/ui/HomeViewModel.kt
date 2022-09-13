@@ -1,6 +1,5 @@
-package com.example.mxkcd.ui.detail
+package com.example.mxkcd.ui
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -16,17 +15,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ItemDetailViewModel @Inject constructor(private val repo: ItemRepo) : ViewModel() {
-    val item: MutableState<DataState<XkcdItem>?> = mutableStateOf(null)
+class HomeViewModel @Inject constructor(private val repo: ItemRepo) : ViewModel() {
+    val all: MutableState<DataState<List<XkcdItem>>?> = mutableStateOf(null)
 
-    fun itemDetail(id : Int) = viewModelScope.launch(Dispatchers.IO) {
-        repo.detail(id).onEach {
-            Log.d("debug", "item=$item")
-            item.value = it
+    suspend fun getAll() = viewModelScope.launch(Dispatchers.IO) {
+        val all1 = repo.getAll()
+        all1.onEach {
+            all.value = it
         }.launchIn(viewModelScope)
-    }
-
-    fun saveItemDetail(xkcdItem : XkcdItem) = viewModelScope.launch(Dispatchers.IO) {
-        repo.saveItem(xkcdItem)
     }
 }

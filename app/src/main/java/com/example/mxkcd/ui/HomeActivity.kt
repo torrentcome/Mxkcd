@@ -3,6 +3,9 @@ package com.example.mxkcd.ui
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -57,6 +60,9 @@ private fun XkcdApp() {
 @Composable
 fun HomeScreen() {
     val focusRequester = FocusRequester()
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused = interactionSource.collectIsFocusedAsState().value
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -64,16 +70,17 @@ fun HomeScreen() {
         content = {
             Text("Welcome !")
             Button(
-                modifier = Modifier.padding(16.dp).focusRequester(focusRequester),
+                modifier = Modifier.padding(16.dp)
+                    .focusRequester(focusRequester)
+                    .focusable(interactionSource = interactionSource),
                 elevation = ButtonDefaults.elevation(5.dp),
-                onClick = {}) {
-                Text(text = "Simple button", modifier = Modifier.padding(16.dp))
+                onClick = {
+                    focusRequester.requestFocus()
+                }) {
+                Text(text = "Get a story", modifier = Modifier.padding(16.dp))
             }
         }
     )
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
 }
 
 object Nav {

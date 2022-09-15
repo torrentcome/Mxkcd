@@ -19,7 +19,7 @@ class ItemRepo @Inject constructor(private val api: XkcdApi, private val db: DbX
             val searchResult = api.getXkcdItem(id)
             emit(DataState.Success(searchResult.asDtoModel()))
         } catch (e: Exception) {
-            Log.e("e", e.printStackTrace().toString())
+            Log.e("e", "detail error ->", e)
             emit(DataState.Error(e))
         }
     }
@@ -28,7 +28,7 @@ class ItemRepo @Inject constructor(private val api: XkcdApi, private val db: DbX
         try {
             db.xkcdDao.put(xkcdItem.asDbModel())
         } catch (e: Exception) {
-            Log.e("e", e.printStackTrace().toString())
+            Log.e("e", "saveItem error ->", e)
         }
     }
 
@@ -38,7 +38,7 @@ class ItemRepo @Inject constructor(private val api: XkcdApi, private val db: DbX
             val all = db.xkcdDao.getAll()
             emit(DataState.Success(all.map { it.asDto() }))
         } catch (e: Exception) {
-            Log.e("e", e.printStackTrace().toString())
+            Log.e("e", "getAll error ->", e)
             emit(DataState.Error(e))
         }
     }

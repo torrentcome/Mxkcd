@@ -31,7 +31,17 @@ class NetItem (
     val day: String = ""
 ) {
     override fun toString(): String {
-        return "NetItem(num=$num, month='$month', link='$link', year='$year', news='$news', safe_title='$safe_title', transcript='$transcript', alt='$alt', img='$img', title='$title', day='$day')"
+        return "NetItem(num=$num" +
+                ", month='$month'" +
+                ", link='$link'" +
+                ", year='$year'" +
+                ", news='$news'" +
+                ", safe_title='$safe_title'" +
+                ", transcript='$transcript'" +
+                ", alt='$alt'" +
+                ", img='$img'" +
+                ", title='$title'" +
+                ", day='$day')"
     }
 }
 

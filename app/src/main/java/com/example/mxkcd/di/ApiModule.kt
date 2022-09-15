@@ -38,5 +38,4 @@ class ApiModule {
     @Provides
     @Singleton
     fun provideApiService(retrofit: Retrofit): XkcdApi = retrofit.create(XkcdApi::class.java)
-
 }

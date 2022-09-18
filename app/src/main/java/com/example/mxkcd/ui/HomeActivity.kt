@@ -6,8 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
@@ -15,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -72,13 +76,15 @@ fun HomeScreen(controller: NavHostController) {
         Log.d("debug", "pass here")
         homeDetailViewModel.getAll()
     }
-    all.value.let {
+    all.value?.let {
         if (it is DataState.Success<List<XkcdItem>>) {
-            val data: ArrayList<XkcdItem> = it.data as ArrayList<XkcdItem>
-            LazyColumn {
-                items(data) { item ->
-                    VitaminButtons.Secondary(text = "" + item.num) {
-                        controller.navigate(Nav.HOME.plus("/${item.num}"))
+            if (it.data.isNotEmpty()) {
+                val data: ArrayList<XkcdItem> = it.data as ArrayList<XkcdItem>
+                LazyVerticalGrid (columns = GridCells.Adaptive(128.dp)){
+                    items(data.size) { index ->
+                        VitaminButtons.Secondary(text = "" + data[index].num) {
+                            controller.navigate(Nav.HOME.plus("/${data[index].num}"))
+                        }
                     }
                 }
             }

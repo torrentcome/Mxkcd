@@ -16,7 +16,7 @@ interface XkcdDao {
     @Query("select * from EntityItem WHERE num LIKE :id")
     fun get(id: Int): Flow<EntityItem>
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     fun put(xkcdItem: EntityItem)
 }
 

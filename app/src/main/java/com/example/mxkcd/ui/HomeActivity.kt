@@ -6,19 +6,15 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -26,11 +22,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.decathlon.vitamin.compose.buttons.VitaminButtons
-import com.decathlon.vitamin.compose.foundation.VitaminTheme
-import com.example.mxkcd.base.DataState
+import com.example.mxkcd.base.Command
 import com.example.mxkcd.dto.XkcdItem
 import com.example.mxkcd.ui.detail.ItemDetailScreen
+import com.example.mxkcd.ui.theme.XkcdAndroidTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @ExperimentalMaterialApi
@@ -39,7 +34,7 @@ class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            VitaminTheme {
+            XkcdAndroidTheme {
                 XkcdApp()
             }
         }
@@ -73,22 +68,7 @@ fun HomeScreen(controller: NavHostController) {
     val all = homeDetailViewModel.all
 
     LaunchedEffect(true) {
-        Log.d("debug", "pass here")
         homeDetailViewModel.getAll()
-    }
-    all.value?.let {
-        if (it is DataState.Success<List<XkcdItem>>) {
-            if (it.data.isNotEmpty()) {
-                val data: ArrayList<XkcdItem> = it.data as ArrayList<XkcdItem>
-                LazyVerticalGrid (columns = GridCells.Adaptive(128.dp)){
-                    items(data.size) { index ->
-                        VitaminButtons.Secondary(text = "" + data[index].num) {
-                            controller.navigate(Nav.HOME.plus("/${data[index].num}"))
-                        }
-                    }
-                }
-            }
-        }
     }
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -96,10 +76,30 @@ fun HomeScreen(controller: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         content = {
             Text("Welcome !")
-            VitaminButtons.Primary(text = "Get a story") {
+            OutlinedButton(onClick = {
                 val random = (1..1000).random()
                 Log.d("debug", "random=$random")
                 controller.navigate(Nav.HOME.plus("/$random"))
+            }) {
+                Text("Get a story")
+            }
+            all.value?.let {
+                if (it is Command.Success<List<XkcdItem>>) {
+                    if (it.data.isNotEmpty()) {
+                        val data: ArrayList<XkcdItem> = it.data as ArrayList<XkcdItem>
+                        LazyRow {
+                            items(data.size) { index ->
+                                OutlinedButton(
+                                    onClick = {
+                                        controller.navigate(Nav.HOME.plus("/${data[index].num}"))
+                                    },
+                                ) {
+                                    Text(text = "" + data[index].num)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     )

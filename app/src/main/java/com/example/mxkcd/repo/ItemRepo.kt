@@ -1,7 +1,7 @@
 package com.example.mxkcd.repo
 
 import android.util.Log
-import com.example.mxkcd.base.DataState
+import com.example.mxkcd.base.Command
 import com.example.mxkcd.db.DbXkcd
 import com.example.mxkcd.db.asDto
 import com.example.mxkcd.dto.XkcdItem
@@ -13,14 +13,14 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class ItemRepo @Inject constructor(private val api: XkcdApi, private val db: DbXkcd) {
-    suspend fun detail(id: Int): Flow<DataState<XkcdItem>> = flow {
-        emit(DataState.Loading)
+    suspend fun detail(id: Int): Flow<Command<XkcdItem>> = flow {
+        emit(Command.Loading)
         try {
             val searchResult = api.getXkcdItem(id)
-            emit(DataState.Success(searchResult.asDtoModel()))
+            emit(Command.Success(searchResult.asDtoModel()))
         } catch (e: Exception) {
             Log.e("e", "detail error ->", e)
-            emit(DataState.Error(e))
+            emit(Command.Error(e))
         }
     }
 
@@ -32,14 +32,14 @@ class ItemRepo @Inject constructor(private val api: XkcdApi, private val db: DbX
         }
     }
 
-    suspend fun getAll(): Flow<DataState<List<XkcdItem>>> = flow {
-        emit(DataState.Loading)
+    suspend fun getAll(): Flow<Command<List<XkcdItem>>> = flow {
+        emit(Command.Loading)
         try {
             val all = db.xkcdDao.getAll()
-            emit(DataState.Success(all.map { it.asDto() }))
+            emit(Command.Success(all.map { it.asDto() }))
         } catch (e: Exception) {
             Log.e("e", "getAll error ->", e)
-            emit(DataState.Error(e))
+            emit(Command.Error(e))
         }
     }
 }

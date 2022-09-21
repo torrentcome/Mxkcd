@@ -1,7 +1,6 @@
 package com.example.mxkcd.ui.detail
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -9,22 +8,17 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.annotation.ExperimentalCoilApi
-import coil.compose.rememberImagePainter
-import com.decathlon.vitamin.compose.prices.VitaminPriceSizes
-import com.decathlon.vitamin.compose.prices.VitaminPrices
-import com.decathlon.vitamin.compose.progressbars.VitaminCircularProgressBarSizes
-import com.decathlon.vitamin.compose.progressbars.VitaminProgressBars
-import com.example.mxkcd.R
-import com.example.mxkcd.base.DataState
+import com.example.mxkcd.base.Command
 import com.example.mxkcd.dto.XkcdItem
+import com.example.mxkcd.ui.base.ProgressIndicator
+import com.skydoves.landscapist.ImageOptions
+import com.skydoves.landscapist.coil.CoilImage
 
-@OptIn(ExperimentalCoilApi::class)
 @ExperimentalMaterialApi
 @Composable
 fun ItemDetailScreen(id: Int) {
@@ -32,7 +26,6 @@ fun ItemDetailScreen(id: Int) {
     val item = itemDetailViewModel.item
 
     LaunchedEffect(true) {
-        Log.d("debug", "pass here")
         itemDetailViewModel.itemDetail(id)
     }
 
@@ -43,7 +36,7 @@ fun ItemDetailScreen(id: Int) {
             .padding(8.dp)
     ) {
         item.value.let {
-            if (it is DataState.Success<XkcdItem>) {
+            if (it is Command.Success<XkcdItem>) {
                 itemDetailViewModel.saveItemDetail(it.data)
                 Text(it.data.title)
                 Text(it.data.safe_title)
@@ -52,32 +45,21 @@ fun ItemDetailScreen(id: Int) {
                         .fillMaxWidth()
                         .padding(vertical = 20.dp)
                 ) {
-                    VitaminPrices.Accent(
-                        text = it.data.year,
-                        sizes = VitaminPriceSizes.small()
-                    )
+                    Text(text = it.data.year)
                 }
-                val painter = rememberImagePainter(data = it.data.img)
-                Image(
-                    painter = painter,
-                    contentDescription = it.data.transcript,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillWidth
+                CoilImage(
+                    imageModel = it.data.img, // loading a network image or local resource using an URL.
+                    imageOptions = ImageOptions(
+                        contentScale = ContentScale.None,
+                        alignment = Alignment.Center
+                    )
                 )
             } else {
-                VitaminProgressBars.Circular(
-                    modifier = Modifier.progressScreenModifier(),
-                    sizes = VitaminCircularProgressBarSizes.small(),
-                    content = {
-                        ImageCircular(
-                            painter = painterResource(id = R.drawable.xkcd),
-                            contentDescription = "Waiting..."
-                        )
-                    }
+                ProgressIndicator(
+                    modifier = Modifier.progressScreenModifier()
                 )
             }
         }
-
     }
 }
 

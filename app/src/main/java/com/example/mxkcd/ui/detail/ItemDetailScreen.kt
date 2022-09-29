@@ -1,10 +1,8 @@
 package com.example.mxkcd.ui.detail
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,11 +13,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mxkcd.base.Command
 import com.example.mxkcd.dto.XkcdItem
-import com.example.mxkcd.ui.base.ProgressIndicator
+import com.example.mxkcd.ui.compo.ProgressIndicator
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 
-@ExperimentalMaterialApi
 @Composable
 fun ItemDetailScreen(id: Int) {
     val itemDetailViewModel = hiltViewModel<ItemDetailViewModel>()

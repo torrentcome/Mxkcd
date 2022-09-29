@@ -49,6 +49,7 @@ dependencies {
     implementation "androidx.compose.ui:ui:1.3.0-beta02"
     implementation "androidx.compose.material:material:1.3.0-beta02"
     implementation "androidx.compose.ui:ui-tooling:1.3.0-beta02"
+    implementation "androidx.compose.ui:ui-util:1.3.0-beta02"
 
     // nav
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'

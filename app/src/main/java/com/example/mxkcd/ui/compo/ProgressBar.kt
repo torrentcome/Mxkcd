@@ -1,4 +1,4 @@
-package com.example.mxkcd.ui.base
+package com.example.mxkcd.ui.compo
 
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ProgressIndicatorDefaults

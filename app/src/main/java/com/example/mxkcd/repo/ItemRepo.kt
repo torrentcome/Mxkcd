@@ -3,6 +3,7 @@ package com.example.mxkcd.repo
 import android.util.Log
 import com.example.mxkcd.base.Command
 import com.example.mxkcd.db.DbXkcd
+import com.example.mxkcd.db.EntityItem
 import com.example.mxkcd.db.asDto
 import com.example.mxkcd.dto.XkcdItem
 import com.example.mxkcd.dto.asDbModel
@@ -10,6 +11,7 @@ import com.example.mxkcd.net.XkcdApi
 import com.example.mxkcd.net.asDtoModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
 import javax.inject.Inject
 
 class ItemRepo @Inject constructor(private val api: XkcdApi, private val db: DbXkcd) {

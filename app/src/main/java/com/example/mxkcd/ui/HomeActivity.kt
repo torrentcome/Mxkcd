@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +19,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -30,6 +33,7 @@ import androidx.navigation.navArgument
 import com.example.mxkcd.base.Command
 import com.example.mxkcd.dto.XkcdItem
 import com.example.mxkcd.ui.detail.ItemDetailScreen
+import com.example.mxkcd.ui.lib.MComposePagerSnapHelper
 import com.example.mxkcd.ui.theme.XkcdAndroidTheme
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
@@ -96,6 +100,50 @@ fun HomeScreen(controller: NavHostController) {
                         val listState = rememberLazyListState()
                         val coroutineScope = rememberCoroutineScope()
 
+                        MComposePagerSnapHelper(width = 72.dp) { listState ->
+                            LazyRow(state = listState) {
+                                items(count = data.size) { index ->
+                                    Card(
+                                        modifier = Modifier
+                                            .width(64.dp)
+                                            .height(128.dp)
+                                            .padding(
+                                                start = if (index == 0) 16.dp else 16.dp,
+                                                top = 16.dp, bottom = 16.dp,
+                                                end = if (index == 4) 16.dp else 8.dp
+                                            ),
+                                        backgroundColor = Color.LightGray,
+                                        shape = RoundedCornerShape(12)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .wrapContentWidth()
+                                                .wrapContentHeight(),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            CoilImage(
+                                                imageModel = data[index].img,
+                                                modifier = Modifier
+                                                    .width(64.dp)
+                                                    .height(128.dp),
+                                                imageOptions = ImageOptions(
+                                                    contentScale = ContentScale.Inside,
+                                                    alignment = Alignment.Center
+                                                )
+                                            )
+                                            OutlinedButton(
+                                                onClick = {
+                                                    controller.navigate(Nav.HOME.plus("/${data[index].num}"))
+                                                },
+                                            ) {
+                                                Text(text = "" + data[index].num)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         LazyRow(state = listState,
                             modifier = Modifier.onKeyEvent { keyevent ->
                                 val action = keyevent.nativeKeyEvent.action
@@ -111,7 +159,12 @@ fun HomeScreen(controller: NavHostController) {
                                 if (keyCode == KEYCODE_DPAD_RIGHT) {
                                     coroutineScope.launch {
                                         // Animate scroll to the 10th item
-                                        listState.scrollToItem(index = noMas(listState.firstVisibleItemIndex + 1, data.size))
+                                        listState.scrollToItem(
+                                            index = noMas(
+                                                listState.firstVisibleItemIndex + 1,
+                                                data.size
+                                            )
+                                        )
                                     }
                                 }
                                 return@onKeyEvent false
@@ -163,6 +216,6 @@ fun nonNegatif(e: Int): Int {
     return if (e <= 0) 0 else e
 }
 
-fun noMas(e: Int, max : Int): Int {
+fun noMas(e: Int, max: Int): Int {
     return if (e >= max) nonNegatif(max) else nonNegatif(e)
 }

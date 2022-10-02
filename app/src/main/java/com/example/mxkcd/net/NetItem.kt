@@ -1,6 +1,5 @@
 package com.example.mxkcd.net
 
-import com.example.mxkcd.db.EntityItem
 import com.example.mxkcd.dto.XkcdItem
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

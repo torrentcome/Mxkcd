@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface XkcdDao {
-    @Query("select * from EntityItem ORDER BY num ASC")
+    @Query("select * from EntityItem order by num asc")
     fun getAll(): List<EntityItem>
 
-    @Query("select * from EntityItem WHERE num LIKE :id")
+    @Query("select * from EntityItem where num like :id")
     fun get(id: Int): Flow<EntityItem>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

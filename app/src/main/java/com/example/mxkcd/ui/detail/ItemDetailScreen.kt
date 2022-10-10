@@ -3,21 +3,16 @@ package com.example.mxkcd.ui.detail
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mxkcd.base.Command
 import com.example.mxkcd.dto.DtoItem
 import com.example.mxkcd.ui.compo.ErrorDialog
 import com.example.mxkcd.ui.compo.ProgressIndicator
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.coil.CoilImage
 
 @Composable
 fun ItemDetailScreen(id: Int) {
@@ -36,35 +31,21 @@ fun ItemDetailScreen(id: Int) {
     ) {
         when (item) {
             is Command.Success<DtoItem> -> {
-                itemDetailViewModel.saveItemDetail(item.data)
-                Text(item.data.title)
-                Text(item.data.safe_title)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 20.dp)
-                ) {
-                    Text(text = item.data.year)
-                }
-                CoilImage(
-                    imageModel = item.data.img, // loading a network image or local resource using an URL.
-                    imageOptions = ImageOptions(
-                        contentScale = ContentScale.None,
-                        alignment = Alignment.Center
-                    )
-                )
+                ItemSuccessView(itemDetailViewModel, item)
             }
             is Command.Error -> {
                 ErrorDialog(item.exception)
             }
-            is Command.Loading ->{
+            is Command.Loading -> {
                 ProgressIndicator(
-                    modifier = Modifier.progressScreenModifier()
+                    modifier = Modifier.progressScreenModifier(),
+                    string = item.reason
                 )
             }
         }
     }
 }
+
 
 internal fun Modifier.progressScreenModifier(
     firstItem: Boolean = false,

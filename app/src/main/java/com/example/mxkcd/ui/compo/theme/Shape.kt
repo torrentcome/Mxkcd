@@ -1,4 +1,4 @@
-package com.example.mxkcd.ui.theme
+package com.example.mxkcd.ui.compo.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes

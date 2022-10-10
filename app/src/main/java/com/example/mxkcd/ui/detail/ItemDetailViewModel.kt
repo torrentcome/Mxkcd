@@ -22,7 +22,7 @@ class ItemDetailViewModel @Inject constructor(private val repo: ItemRepo) : View
 
     fun itemDetail(id : Int) = viewModelScope.launch(Dispatchers.IO) {
         repo.detail(id).onEach {
-            Log.d("debug", "item=$item")
+            Log.d("debug", "_item=$_item")
             _item.value = it
         }.launchIn(viewModelScope)
     }

@@ -1,4 +1,4 @@
-package com.example.mxkcd.ui
+package com.example.mxkcd.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -2,7 +2,7 @@ package com.example.mxkcd.dto
 
 import com.example.mxkcd.db.EntityItem
 
-data class XkcdItem (
+data class DtoItem (
     val month: String = "",
     val num: Long = -1,
     val link: String = "",
@@ -16,7 +16,7 @@ data class XkcdItem (
     val day: String = ""
 )
 
-fun XkcdItem.asDbModel(): EntityItem {
+fun DtoItem.asEntityItem(): EntityItem {
     return EntityItem(
         num = num,
         month = month,

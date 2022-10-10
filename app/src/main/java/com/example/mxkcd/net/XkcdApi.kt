@@ -5,5 +5,5 @@ import retrofit2.http.Path
 
 interface XkcdApi {
     @GET("{id}/info.0.json")
-    suspend fun getXkcdItem(@Path("id") id: Int): NetItem
+    suspend fun fetch(@Path("id") id: Int): NetResponse
 }

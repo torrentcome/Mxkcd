@@ -2,7 +2,7 @@ package com.example.mxkcd.db
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.mxkcd.dto.XkcdItem
+import com.example.mxkcd.dto.DtoItem
 
 @Entity
 data class EntityItem (
@@ -20,8 +20,8 @@ data class EntityItem (
     val day: String = ""
 )
 
-fun EntityItem.asDto(): XkcdItem {
-    return XkcdItem(
+fun EntityItem.asDto(): DtoItem {
+    return DtoItem(
         num = num,
         month = month,
         link = link,

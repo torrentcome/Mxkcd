@@ -1,11 +1,11 @@
 package com.example.mxkcd.net
 
-import com.example.mxkcd.dto.XkcdItem
+import com.example.mxkcd.dto.DtoItem
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-class NetItem (
+class NetResponse (
     @Json(name = "num")
     val num: Long = -1,
     @Json(name = "month")
@@ -44,8 +44,8 @@ class NetItem (
     }
 }
 
-fun NetItem.asDtoModel(): XkcdItem {
-    return XkcdItem(
+fun NetResponse.asDtoModel(): DtoItem {
+    return DtoItem(
         num = num,
         month = month,
         link = link,

@@ -6,5 +6,5 @@ package com.example.mxkcd.base
 sealed class Command<out R> {
     data class Success<out T>(val data: T) : Command<T>()
     data class Error(val exception: Exception) : Command<Nothing>()
-    object Loading : Command<Nothing>()
+    data class Loading(val reason: String = "") : Command<Nothing>()
 }

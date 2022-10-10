@@ -3,39 +3,40 @@ package com.example.mxkcd.repo
 import android.util.Log
 import com.example.mxkcd.base.Command
 import com.example.mxkcd.db.DbXkcd
-import com.example.mxkcd.db.EntityItem
 import com.example.mxkcd.db.asDto
-import com.example.mxkcd.dto.XkcdItem
-import com.example.mxkcd.dto.asDbModel
+import com.example.mxkcd.dto.DtoItem
+import com.example.mxkcd.dto.asEntityItem
 import com.example.mxkcd.net.XkcdApi
 import com.example.mxkcd.net.asDtoModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.launchIn
 import javax.inject.Inject
 
 class ItemRepo @Inject constructor(private val api: XkcdApi, private val db: DbXkcd) {
-    suspend fun detail(id: Int): Flow<Command<XkcdItem>> = flow {
-        emit(Command.Loading)
+    suspend fun detail(id: Int): Flow<Command<DtoItem>> = flow {
+        emit(Command.Loading("try to fetch from api"))
         try {
-            val searchResult = api.getXkcdItem(id)
-            emit(Command.Success(searchResult.asDtoModel()))
+            val fetchResult = api.fetch(id)
+            emit(Command.Success(fetchResult.asDtoModel()))
         } catch (e: Exception) {
             Log.e("e", "detail error ->", e)
             emit(Command.Error(e))
         }
     }
 
-    suspend fun saveItem(xkcdItem: XkcdItem) {
+    fun save(dtoItem: DtoItem): Flow<Command<DtoItem>> = flow {
+        emit(Command.Loading("try to save in Db"))
         try {
-            db.xkcdDao.put(xkcdItem.asDbModel())
+            db.xkcdDao.put(dtoItem.asEntityItem())
+            emit(Command.Success(dtoItem))
         } catch (e: Exception) {
             Log.e("e", "saveItem error ->", e)
+            emit(Command.Error(e))
         }
     }
 
-    suspend fun getAll(): Flow<Command<List<XkcdItem>>> = flow {
-        emit(Command.Loading)
+    suspend fun getAll(): Flow<Command<List<DtoItem>>> = flow {
+        emit(Command.Loading("try to select * the Db"))
         try {
             val all = db.xkcdDao.getAll()
             emit(Command.Success(all.map { it.asDto() }))

@@ -6,13 +6,15 @@ import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mxkcd.base.Command
-import com.example.mxkcd.dto.XkcdItem
+import com.example.mxkcd.dto.DtoItem
+import com.example.mxkcd.ui.compo.ErrorDialog
 import com.example.mxkcd.ui.compo.ProgressIndicator
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
@@ -20,7 +22,7 @@ import com.skydoves.landscapist.coil.CoilImage
 @Composable
 fun ItemDetailScreen(id: Int) {
     val itemDetailViewModel = hiltViewModel<ItemDetailViewModel>()
-    val item = itemDetailViewModel.item
+    val item = itemDetailViewModel.item.collectAsState().value
 
     LaunchedEffect(true) {
         itemDetailViewModel.itemDetail(id)
@@ -32,26 +34,30 @@ fun ItemDetailScreen(id: Int) {
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        item.value.let {
-            if (it is Command.Success<XkcdItem>) {
-                itemDetailViewModel.saveItemDetail(it.data)
-                Text(it.data.title)
-                Text(it.data.safe_title)
+        when (item) {
+            is Command.Success<DtoItem> -> {
+                itemDetailViewModel.saveItemDetail(item.data)
+                Text(item.data.title)
+                Text(item.data.safe_title)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 20.dp)
                 ) {
-                    Text(text = it.data.year)
+                    Text(text = item.data.year)
                 }
                 CoilImage(
-                    imageModel = it.data.img, // loading a network image or local resource using an URL.
+                    imageModel = item.data.img, // loading a network image or local resource using an URL.
                     imageOptions = ImageOptions(
                         contentScale = ContentScale.None,
                         alignment = Alignment.Center
                     )
                 )
-            } else {
+            }
+            is Command.Error -> {
+                ErrorDialog(item.exception)
+            }
+            is Command.Loading ->{
                 ProgressIndicator(
                     modifier = Modifier.progressScreenModifier()
                 )

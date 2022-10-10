@@ -6,6 +6,7 @@ import android.view.KeyEvent.KEYCODE_DPAD_LEFT
 import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -13,13 +14,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -31,9 +33,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.mxkcd.base.Command
-import com.example.mxkcd.dto.XkcdItem
+import com.example.mxkcd.dto.DtoItem
+import com.example.mxkcd.ext.noMas
+import com.example.mxkcd.ext.nonNegatif
+import com.example.mxkcd.ui.compo.ErrorDialog
+import com.example.mxkcd.ui.compo.ProgressIndicator
 import com.example.mxkcd.ui.detail.ItemDetailScreen
-import com.example.mxkcd.ui.lib.MComposePagerSnapHelper
+import com.example.mxkcd.ui.detail.progressScreenModifier
 import com.example.mxkcd.ui.theme.XkcdAndroidTheme
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
@@ -74,7 +80,7 @@ private fun XkcdApp() {
 @Composable
 fun HomeScreen(controller: NavHostController) {
     val homeDetailViewModel = hiltViewModel<HomeViewModel>()
-    val all: MutableState<Command<List<XkcdItem>>?> = homeDetailViewModel.all
+    val all: Command<List<DtoItem>> = homeDetailViewModel.all.collectAsState().value
 
     LaunchedEffect(true) {
         homeDetailViewModel.getAll()
@@ -84,81 +90,36 @@ fun HomeScreen(controller: NavHostController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         content = {
-            Text("Welcome !")
-            OutlinedButton(onClick = {
-                val random = (1..1000).random()
-                Log.d("debug", "random=$random")
-                controller.navigate(Nav.HOME.plus("/$random"))
-            }) {
-                Text("Get a story")
-            }
-            all.value?.let {
-                if (it is Command.Success<List<XkcdItem>>) {
-                    if (it.data.isNotEmpty()) {
-                        val data: ArrayList<XkcdItem> = it.data as ArrayList<XkcdItem>
-
-                        val listState = rememberLazyListState()
-                        val coroutineScope = rememberCoroutineScope()
-
-                        MComposePagerSnapHelper(width = 72.dp) { listState ->
-                            LazyRow(state = listState) {
-                                items(count = data.size) { index ->
-                                    Card(
-                                        modifier = Modifier
-                                            .width(64.dp)
-                                            .height(128.dp)
-                                            .padding(
-                                                start = if (index == 0) 16.dp else 16.dp,
-                                                top = 16.dp, bottom = 16.dp,
-                                                end = if (index == 4) 16.dp else 8.dp
-                                            ),
-                                        backgroundColor = Color.LightGray,
-                                        shape = RoundedCornerShape(12)
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .wrapContentWidth()
-                                                .wrapContentHeight(),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            CoilImage(
-                                                imageModel = data[index].img,
-                                                modifier = Modifier
-                                                    .width(64.dp)
-                                                    .height(128.dp),
-                                                imageOptions = ImageOptions(
-                                                    contentScale = ContentScale.Inside,
-                                                    alignment = Alignment.Center
-                                                )
-                                            )
-                                            OutlinedButton(
-                                                onClick = {
-                                                    controller.navigate(Nav.HOME.plus("/${data[index].num}"))
-                                                },
-                                            ) {
-                                                Text(text = "" + data[index].num)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+            all.let {
+                when (it) {
+                    is Command.Success<List<DtoItem>> -> {
+                        Text("Welcome !")
+                        OutlinedButton(onClick = {
+                            val random = (1..1000).random()
+                            Log.d("debug", "random=$random")
+                            controller.navigate(Nav.HOME.plus("/$random"))
+                        }) {
+                            Text("Get a story")
                         }
 
+                        val data: ArrayList<DtoItem> = it.data as ArrayList<DtoItem>
+                        val listState = rememberLazyListState()
+                        val coroutineScope = rememberCoroutineScope()
+                        val requester = FocusRequester()
+                        var scale by remember { mutableStateOf(1f) }
                         LazyRow(state = listState,
                             modifier = Modifier.onKeyEvent { keyevent ->
                                 val action = keyevent.nativeKeyEvent.action
                                 val keyCode = keyevent.nativeKeyEvent.keyCode
                                 Log.e("Home", "action =$action")
                                 Log.e("Home", "keyCode =$keyCode")
-                                if (keyCode == KEYCODE_DPAD_LEFT) {
-                                    coroutineScope.launch {
-                                        // Animate scroll to the 10th item
-                                        listState.scrollToItem(index = nonNegatif(listState.firstVisibleItemIndex - 1))
+                                when (keyCode) {
+                                    KEYCODE_DPAD_LEFT -> coroutineScope.launch {
+                                        listState.scrollToItem(
+                                            index = nonNegatif(listState.firstVisibleItemIndex - 1)
+                                        )
                                     }
-                                }
-                                if (keyCode == KEYCODE_DPAD_RIGHT) {
-                                    coroutineScope.launch {
-                                        // Animate scroll to the 10th item
+                                    KEYCODE_DPAD_RIGHT -> coroutineScope.launch {
                                         listState.scrollToItem(
                                             index = noMas(
                                                 listState.firstVisibleItemIndex + 1,
@@ -170,32 +131,58 @@ fun HomeScreen(controller: NavHostController) {
                                 return@onKeyEvent false
                             }) {
                             items(data.size) { index ->
-                                Column(
+                                Card(
                                     modifier = Modifier
-                                        .wrapContentWidth()
-                                        .wrapContentHeight(),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    CoilImage(
-                                        imageModel = data[index].img,
-                                        modifier = Modifier
-                                            .width(64.dp)
-                                            .height(128.dp),
-                                        imageOptions = ImageOptions(
-                                            contentScale = ContentScale.Inside,
-                                            alignment = Alignment.Center
+                                        .width(172.dp)
+                                        .height(256.dp)
+                                        .padding(
+                                            start = if (index == 0) 16.dp else 16.dp,
+                                            top = 16.dp, bottom = 16.dp,
+                                            end = if (index == 4) 16.dp else 8.dp
                                         )
-                                    )
-                                    OutlinedButton(
-                                        onClick = {
-                                            controller.navigate(Nav.HOME.plus("/${data[index].num}"))
-                                        },
+                                        .focusRequester(focusRequester = requester)
+                                        .onFocusChanged { focusable ->
+                                            scale = if (focusable.isFocused) 3f else 1f
+                                        }
+                                        .focusable()
+                                        .graphicsLayer(
+                                            scaleX = scale,
+                                            scaleY = scale
+                                        ),
+                                    backgroundColor = Color.LightGray,
+                                    shape = RoundedCornerShape(8),
+
                                     ) {
-                                        Text(text = "" + data[index].num)
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        OutlinedButton(
+                                            onClick = {
+                                                controller.navigate(Nav.HOME.plus("/${data[index].num}"))
+                                            },
+                                        ) {
+                                            Text(text = "" + data[index].num)
+                                        }
+                                        CoilImage(
+                                            imageModel = data[index].img,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .fillMaxHeight(),
+                                            imageOptions = ImageOptions(
+                                                contentScale = ContentScale.Crop,
+                                                alignment = Alignment.Center
+                                            )
+                                        )
                                     }
                                 }
                             }
                         }
+                    }
+                    is Command.Error -> {
+                        ErrorDialog(it.exception)
+                    }
+                    is Command.Loading -> {
+                        ProgressIndicator(
+                            modifier = Modifier.progressScreenModifier()
+                        )
                     }
                 }
             }
@@ -210,12 +197,4 @@ object Nav {
         const val ID = "id"
         const val DETAILS_PATH = "/{id}"
     }
-}
-
-fun nonNegatif(e: Int): Int {
-    return if (e <= 0) 0 else e
-}
-
-fun noMas(e: Int, max: Int): Int {
-    return if (e >= max) nonNegatif(max) else nonNegatif(e)
 }

@@ -122,7 +122,7 @@ fun HomeScreen(controller: NavHostController) {
                                 return@onKeyEvent false
                             }) {
                             items(data.size) { index ->
-                                CardHome(index, requester, scale, controller, data)
+                                HomeCard(index, requester, scale, controller, data)
                             }
                         }
                     }

@@ -23,7 +23,7 @@ import com.skydoves.landscapist.coil.CoilImage
 
 
 @Composable
-internal fun CardHome(
+internal fun HomeCard(
     index: Int,
     requester: FocusRequester,
     scale: Float,

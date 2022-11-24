@@ -8,10 +8,10 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.mxkcd.R
 
 val fonts = FontFamily(
-    Font(R.font.xkcd_script, weight = FontWeight.Normal),
-    Font(R.font.xkcd_script, weight = FontWeight.Medium),
-    Font(R.font.xkcd_regular, weight = FontWeight.Bold),
-    Font(R.font.xkcd_regular, weight = FontWeight.Black)
+    Font(R.font.pacfont, weight = FontWeight.Normal),
+    Font(R.font.pacfont, weight = FontWeight.Medium),
+    Font(R.font.pacfont, weight = FontWeight.Bold),
+    Font(R.font.pacfont, weight = FontWeight.Black)
 )
 
 val Typography = Typography(
@@ -35,3 +35,5 @@ val Typography = Typography(
         fontWeight = FontWeight.Black
     )
 )
+
+public lateinit var customTypeface: android.graphics.Typeface

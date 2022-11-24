@@ -1,23 +1,27 @@
 package com.example.mxkcd.ui.home
 
+import android.graphics.Paint
 import android.os.Bundle
 import android.util.Log
-import android.view.KeyEvent.KEYCODE_DPAD_LEFT
-import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -25,22 +29,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.mxkcd.R
 import com.example.mxkcd.base.Command
 import com.example.mxkcd.dto.DtoItem
-import com.example.mxkcd.ext.noMas
-import com.example.mxkcd.ext.nonNegatif
-import com.example.mxkcd.ui.compo.ErrorDialog
-import com.example.mxkcd.ui.compo.ProgressIndicator
 import com.example.mxkcd.ui.compo.theme.XkcdAndroidTheme
+import com.example.mxkcd.ui.compo.theme.customTypeface
 import com.example.mxkcd.ui.detail.ItemDetailScreen
-import com.example.mxkcd.ui.detail.progressScreenModifier
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        customTypeface = resources.getFont(R.font.pacfont)
         setContent {
             XkcdAndroidTheme {
                 XkcdApp()
@@ -76,70 +77,94 @@ fun HomeScreen(controller: NavHostController) {
     LaunchedEffect(true) {
         homeDetailViewModel.getAll()
     }
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        content = {
-            all.let {
-                when (it) {
-                    is Command.Success<List<DtoItem>> -> {
-                        Text("Welcome !")
-                        OutlinedButton(onClick = {
-                            val random = (1..1000).random()
-                            Log.d("debug", "random=$random")
-                            controller.navigate(Nav.HOME.plus("/$random"))
-                        }) {
-                            Text("Get a story")
-                        }
+    // HomeCompoScreen(all, controller)
+    GameBorder(all, controller)
+}
 
-                        val data: ArrayList<DtoItem> = it.data as ArrayList<DtoItem>
-                        val listState = rememberLazyListState()
-                        val coroutineScope = rememberCoroutineScope()
-                        val requester = FocusRequester()
-                        var scale by remember { mutableStateOf(1f) }
-                        LazyRow(state = listState,
-                            modifier = Modifier.onKeyEvent { keyevent ->
-                                val action = keyevent.nativeKeyEvent.action
-                                val keyCode = keyevent.nativeKeyEvent.keyCode
-                                Log.e("Home", "action =$action")
-                                Log.e("Home", "keyCode =$keyCode")
-                                when (keyCode) {
-                                    KEYCODE_DPAD_LEFT -> coroutineScope.launch {
-                                        listState.scrollToItem(
-                                            index = nonNegatif(listState.firstVisibleItemIndex - 1)
-                                        )
-                                    }
-                                    KEYCODE_DPAD_RIGHT -> coroutineScope.launch {
-                                        listState.scrollToItem(
-                                            index = noMas(
-                                                listState.firstVisibleItemIndex + 1,
-                                                data.size
-                                            )
-                                        )
-                                    }
-                                }
-                                return@onKeyEvent false
-                            }) {
-                            items(data.size) { index ->
-                                HomeCard(index, requester, scale, controller, data)
-                            }
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun GameBorder(all: Command<List<DtoItem>>, controller: NavHostController) {
+    var gestOffsetX by remember { mutableStateOf(0f) }
+    var gestOffsetY by remember { mutableStateOf(0f) }
+    Box(
+        modifier = Modifier
+            .border(6.dp, color = Color.Red)
+            .padding(6.dp)
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    val (x, y) = dragAmount
+                    when {
+                        x > 0 -> { /* right */
+                            Log.e("xkcd", "right")
+                        }
+                        x < 0 -> { /* left */
+                            Log.e("xkcd", "left")
                         }
                     }
-                    is Command.Error -> {
-                        ErrorDialog(it.exception)
+                    when {
+                        y > 0 -> {
+                            Log.e("xkcd", "down")
+                            /* down */
+                        }
+                        y < 0 -> {
+                            Log.e("xkcd", "up")
+                            /* up */
+                        }
                     }
-                    is Command.Loading -> {
-                        ProgressIndicator(
-                            modifier = Modifier.progressScreenModifier(),
-                            string = it.reason
-                        )
-                    }
+                    gestOffsetX += dragAmount.x
+                    gestOffsetY += dragAmount.y
                 }
             }
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxSize()
+        ) {
+            val height = this.size.height
+            val width = this.size.width
+            Log.d("canvas", "width: $width, height: $height ")
+
+            drawContext.canvas.nativeCanvas.apply {
+                drawText(
+                    "c",
+                    size.width / 2,
+                    size.height / 2,
+                    Paint().apply {
+                        textSize = 100f
+                        color = Color.Yellow.toArgb()
+                        textAlign = Paint.Align.CENTER
+                        typeface = customTypeface
+                    }
+                )
+            }
+
+            val borderPath = Path()
+            borderPath.apply {
+                // border
+                lineTo(size.width, 0f)
+                lineTo(size.width, size.height)
+                lineTo(0f, size.height)
+                lineTo(0f, 0f)
+
+                // second border
+                moveTo(50f, 50f)
+                lineTo(size.width - 50f, 50f)
+                lineTo(size.width - 50f, size.height - 50f)
+                lineTo(50f, size.height - 50f)
+                lineTo(50f, 50f)
+            }
+
+            drawPath(
+                path = borderPath,
+                color = Color.Black,
+                style = Stroke(width = 6.dp.toPx())
+            )
         }
-    )
+    }
 }
+
 
 object Nav {
     const val HOME = "home"

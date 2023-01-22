@@ -1,7 +1,6 @@
 package com.example.mxkcd.ui.home
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.border
@@ -40,7 +39,6 @@ class HomeActivity : AppCompatActivity() {
                 LaunchedEffect(Unit) {
                     focusRequester.requestFocus()
                     while (isActive) {
-                        Log.e("Tag", "while")
                         delay(400L)
                         game.step()
                     }
@@ -69,10 +67,26 @@ class HomeActivity : AppCompatActivity() {
                                 },
                                 onDragEnd = {
                                     when (direction) {
-                                        0 -> game.setDirection(Direction.RIGHT).let { true }
-                                        1 -> game.setDirection(Direction.LEFT).let { true }
-                                        2 -> game.setDirection(Direction.DOWN).let { true }
-                                        3 -> game.setDirection(Direction.UP).let { true }
+                                        0 -> {
+                                            game
+                                                .setDirection(Direction.RIGHT)
+                                                .let { true }
+                                        }
+                                        1 -> {
+                                            game
+                                                .setDirection(Direction.LEFT)
+                                                .let { true }
+                                        }
+                                        2 -> {
+                                            game
+                                                .setDirection(Direction.DOWN)
+                                                .let { true }
+                                        }
+                                        3 -> {
+                                            game
+                                                .setDirection(Direction.UP)
+                                                .let { true }
+                                        }
                                     }
                                 }
                             )
@@ -103,11 +117,12 @@ private fun Board(board: Board) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        Column(modifier = Modifier.border(
-            width = 1.dp,
-            color = Color.Yellow,
-            shape = RoundedCornerShape(5.dp)
-        )
+        Column(
+            modifier = Modifier.border(
+                width = 1.dp,
+                color = Color.Yellow,
+                shape = RoundedCornerShape(5.dp)
+            )
         ) {
             board.grid.forEach { row ->
                 Row {
@@ -174,25 +189,21 @@ class Game {
 
         snake.forEach(randomPointGenerator::occupy)
 
-        _board =
-            mutableStateOf(
-                Board(
-                    snake = Snake(points = snake, head = snake.last()),
-                    grid = grid,
-                    cells = grid.flatten().toSet(),
-                    direction = Direction.RIGHT,
-                    food = randomPointGenerator.generate()
-                )
+        _board = mutableStateOf(
+            Board(
+                snake = Snake(points = snake, head = snake.last()),
+                grid = grid,
+                cells = grid.flatten().toSet(),
+                direction = Direction.RIGHT,
+                food = randomPointGenerator.generate()
             )
+        )
     }
 
     val board: State<Board> = _board
 
     fun step() {
         update {
-            Log.e("Tag", "step : update")
-            Log.e("Tag", "step : direction$direction")
-
             val newSnake = snake?.step(direction = direction, food = food, cells = cells)
             snake?.points?.forEach(randomPointGenerator::free)
             newSnake?.points?.forEach(randomPointGenerator::occupy)

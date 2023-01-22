@@ -1,41 +1,30 @@
 package com.example.mxkcd.ui.home
 
-import android.graphics.Paint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.compose.ui.unit.sp
 import com.example.mxkcd.R
-import com.example.mxkcd.base.Command
-import com.example.mxkcd.dto.DtoItem
 import com.example.mxkcd.ui.compo.theme.XkcdAndroidTheme
 import com.example.mxkcd.ui.compo.theme.customTypeface
-import com.example.mxkcd.ui.detail.ItemDetailScreen
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity() {
@@ -44,133 +33,257 @@ class HomeActivity : AppCompatActivity() {
         customTypeface = resources.getFont(R.font.pacfont)
         setContent {
             XkcdAndroidTheme {
-                XkcdApp()
-            }
-        }
-    }
-}
+                val game: Game = remember { Game() }
+                val focusRequester = remember { FocusRequester() }
+                var direction = remember { 1 }
 
-@Composable
-private fun XkcdApp() {
-    val controller = rememberNavController()
-    NavHost(controller, startDestination = Nav.HOME) {
-        composable(Nav.HOME) {
-            HomeScreen(controller)
-        }
-        composable(
-            route = Nav.HOME.plus(Nav.Detail.DETAILS_PATH),
-            arguments = listOf(navArgument(Nav.Detail.ID) {
-                type = NavType.IntType; defaultValue = 1
-            })
-        ) {
-            val id = it.arguments?.getInt(Nav.Detail.ID)
-            id?.let { it1 -> ItemDetailScreen(it1) }
-        }
-    }
-}
-
-@Composable
-fun HomeScreen(controller: NavHostController) {
-    val homeDetailViewModel = hiltViewModel<HomeViewModel>()
-    val all: Command<List<DtoItem>> = homeDetailViewModel.all.collectAsState().value
-
-    LaunchedEffect(true) {
-        homeDetailViewModel.getAll()
-    }
-    // HomeCompoScreen(all, controller)
-    GameBorder(all, controller)
-}
-
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-fun GameBorder(all: Command<List<DtoItem>>, controller: NavHostController) {
-    var gestOffsetX by remember { mutableStateOf(0f) }
-    var gestOffsetY by remember { mutableStateOf(0f) }
-    Box(
-        modifier = Modifier
-            .border(6.dp, color = Color.Red)
-            .padding(6.dp)
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    val (x, y) = dragAmount
-                    when {
-                        x > 0 -> { /* right */
-                            Log.e("xkcd", "right")
-                        }
-                        x < 0 -> { /* left */
-                            Log.e("xkcd", "left")
-                        }
+                LaunchedEffect(Unit) {
+                    focusRequester.requestFocus()
+                    while (isActive) {
+                        Log.e("Tag", "while")
+                        delay(400L)
+                        game.step()
                     }
-                    when {
-                        y > 0 -> {
-                            Log.e("xkcd", "down")
-                            /* down */
+                }
+
+                Box(
+                    modifier = Modifier
+                        .focusRequester(focusRequester)
+                        .focusTarget()
+                        .pointerInput(Unit) {
+                            detectDragGestures(
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    val (x, y) = dragAmount
+                                    if (kotlin.math.abs(x) > kotlin.math.abs(y)) {
+                                        when {
+                                            x > 0 -> direction = 0
+                                            x < 0 -> direction = 1
+                                        }
+                                    } else {
+                                        when {
+                                            y > 0 -> direction = 2
+                                            y < 0 -> direction = 3
+                                        }
+                                    }
+                                },
+                                onDragEnd = {
+                                    when (direction) {
+                                        0 -> game.setDirection(Direction.RIGHT).let { true }
+                                        1 -> game.setDirection(Direction.LEFT).let { true }
+                                        2 -> game.setDirection(Direction.DOWN).let { true }
+                                        3 -> game.setDirection(Direction.UP).let { true }
+                                    }
+                                }
+                            )
                         }
-                        y < 0 -> {
-                            Log.e("xkcd", "up")
-                            /* up */
-                        }
-                    }
-                    gestOffsetX += dragAmount.x
-                    gestOffsetY += dragAmount.y
+                ) {
+                    Board(game.board.value)
                 }
             }
-    ) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxSize()
+        }
+    }
+}
+
+@Composable
+private fun Board(board: Board) {
+    if (board.snake == null) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val height = this.size.height
-            val width = this.size.width
-            Log.d("canvas", "width: $width, height: $height ")
+            Text(text = "GaMe", color = Color.Yellow, fontSize = 32.sp)
+            Text(text = "over", color = Color.Yellow, fontSize = 64.sp)
+        }
+        return
+    }
 
-            drawContext.canvas.nativeCanvas.apply {
-                drawText(
-                    "c",
-                    size.width / 2,
-                    size.height / 2,
-                    Paint().apply {
-                        textSize = 100f
-                        color = Color.Yellow.toArgb()
-                        textAlign = Paint.Align.CENTER
-                        typeface = customTypeface
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(modifier = Modifier.border(
+            width = 1.dp,
+            color = Color.Yellow,
+            shape = RoundedCornerShape(5.dp)
+        )
+        ) {
+            board.grid.forEach { row ->
+                Row {
+                    row.forEach { cell ->
+                        when (cell) {
+                            board.food -> FoodCell()
+                            in board.snake.points -> SnakeCell(isHead = cell == board.snake.head)
+                            else -> EmptyCell()
+                        }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FoodCell() {
+    Text(text = "f", color = Color.White, modifier = Modifier.width(FIX_W.dp))
+}
+
+@Composable
+private fun EmptyCell() {
+    Text(text = " ", color = Color.White, modifier = Modifier.width(FIX_W.dp))
+}
+
+@Composable
+private fun SnakeCell(isHead: Boolean) {
+    when {
+        isHead -> Text(text = "x", color = Color.Red, modifier = Modifier.width(FIX_W.dp))
+        else -> Text(text = "o", color = Color.Green, modifier = Modifier.width(FIX_W.dp))
+    }
+}
+
+const val FIX_W = 14
+
+class Game {
+    private val _board: MutableState<Board>
+    private val randomPointGenerator: RandomPointGenerator
+
+    init {
+        val width = 16
+        val height = width
+        val cy = height / 2
+
+        val snake = setOf(
+            Point(x = 0, y = cy),
+            Point(x = 1, y = cy),
+            Point(x = 2, y = cy),
+            Point(x = 3, y = cy),
+            Point(x = 4, y = cy)
+        )
+
+        val grid = List(height) { y ->
+            List(width) { x ->
+                Point(x = x, y = y)
+            }
+        }
+
+        randomPointGenerator = RandomPointGenerator()
+        grid.forEach { row ->
+            row.forEach(randomPointGenerator::free)
+        }
+
+        snake.forEach(randomPointGenerator::occupy)
+
+        _board =
+            mutableStateOf(
+                Board(
+                    snake = Snake(points = snake, head = snake.last()),
+                    grid = grid,
+                    cells = grid.flatten().toSet(),
+                    direction = Direction.RIGHT,
+                    food = randomPointGenerator.generate()
                 )
-            }
+            )
+    }
 
-            val borderPath = Path()
-            borderPath.apply {
-                // border
-                lineTo(size.width, 0f)
-                lineTo(size.width, size.height)
-                lineTo(0f, size.height)
-                lineTo(0f, 0f)
+    val board: State<Board> = _board
 
-                // second border
-                moveTo(50f, 50f)
-                lineTo(size.width - 50f, 50f)
-                lineTo(size.width - 50f, size.height - 50f)
-                lineTo(50f, size.height - 50f)
-                lineTo(50f, 50f)
-            }
+    fun step() {
+        update {
+            Log.e("Tag", "step : update")
+            Log.e("Tag", "step : direction$direction")
 
-            drawPath(
-                path = borderPath,
-                color = Color.Black,
-                style = Stroke(width = 6.dp.toPx())
+            val newSnake = snake?.step(direction = direction, food = food, cells = cells)
+            snake?.points?.forEach(randomPointGenerator::free)
+            newSnake?.points?.forEach(randomPointGenerator::occupy)
+
+            copy(
+                snake = newSnake,
+                food = when {
+                    newSnake == null -> null
+                    newSnake.head == food -> randomPointGenerator.generate()
+                    else -> food
+                }
             )
         }
     }
+
+    private fun Snake.step(direction: Direction, food: Point?, cells: Set<Point>): Snake? {
+        val newPoints = LinkedHashSet<Point>(points)
+        val newHead = points.last().step(direction)
+
+        if ((newHead in newPoints) || (newHead !in cells)) {
+            return null
+        }
+
+        newPoints += newHead
+
+        if (newHead != food) {
+            newPoints -= points.first()
+        }
+
+        return copy(points = newPoints, head = newHead)
+    }
+
+    private fun Point.step(direction: Direction): Point =
+        when (direction) {
+            Direction.LEFT -> copy(x = x - 1)
+            Direction.UP -> copy(y = y - 1)
+            Direction.RIGHT -> copy(x = x + 1)
+            Direction.DOWN -> copy(y = y + 1)
+        }
+
+    fun setDirection(direction: Direction) {
+        update {
+            copy(
+                direction = if (direction != this.direction.invert()) direction else this.direction
+            )
+        }
+    }
+
+    private inline fun update(func: Board.() -> Board) =
+        _board.value.func().also { _board.value = it }
 }
 
+data class Board(
+    val snake: Snake?,
+    val grid: List<List<Point>>,
+    val cells: Set<Point>,
+    val direction: Direction,
+    val food: Point?
+)
 
-object Nav {
-    const val HOME = "home"
+data class Snake(
+    val points: Set<Point>,
+    val head: Point
+)
 
-    object Detail {
-        const val ID = "id"
-        const val DETAILS_PATH = "/{id}"
+data class Point(
+    val x: Int,
+    val y: Int
+)
+
+enum class Direction {
+    LEFT, UP, RIGHT, DOWN
+}
+
+fun Direction.invert(): Direction =
+    when (this) {
+        Direction.LEFT -> Direction.RIGHT
+        Direction.UP -> Direction.DOWN
+        Direction.RIGHT -> Direction.LEFT
+        Direction.DOWN -> Direction.UP
     }
+
+class RandomPointGenerator {
+    private val available = HashSet<Point>()
+    fun occupy(point: Point) {
+        available -= point
+    }
+
+    fun free(point: Point) {
+        available += point
+    }
+
+    fun generate(): Point = available.random()
 }
